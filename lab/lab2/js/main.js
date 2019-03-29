@@ -51,6 +51,8 @@ The docs: https://www.mapbox.com/api-documentation/#geocoding
 (For this first task, the URL pattern you'll want to produce looks like this:
 `https://api.mapbox.com/geocoding/v5/mapbox.places/{geocode_this}.json?access_token={your_mapbox_token}`)
 
+access_token={pk.eyJ1IjoibWF5dXRhbmFrYSIsImEiOiJjajhieGJ4N3gwMzgzMzNtb2tmMDFiMHJlIn0.qCJLeV-KUvxpAO38a9dPtA}
+
 You might note that this task is slightly underspecified: there are multiple different
 ways to transform text into an address. For the lab, the simplest form of geocoding
 (i.e. without any further options being specified) is entirely appropriate. More complex
@@ -126,7 +128,7 @@ var state = {
 };
 
 /* We'll use underscore's `once` function to make sure this only happens
- *  one time even if weupdate the position later
+ *  one time even if we update the position later
  */
 var goToOrigin = _.once(function(lat, lng) {
   map.flyTo([lat, lng], 14);
@@ -173,5 +175,3 @@ $(document).ready(function() {
   });
 
 });
-
-
