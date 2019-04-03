@@ -55,7 +55,7 @@ var state = {
   count: 0,
   markers: [],
   line: undefined,
-}
+};
 
 /** ---------------
 Map configuration
@@ -96,14 +96,15 @@ function. That being said, you are welcome to make changes if it helps.
 ---------------- */
 
 var resetApplication = function() {
-  _.each(state.markers, function(marker) { map.removeLayer(marker) })
+  _.each(state.markers, function(marker) { map.removeLayer(marker); });
   map.removeLayer(state.line);
 
   state.count = 0;
-  state.markers = []
+  state.markers = [];
   state.line = undefined;
+  console.log(state);
   $('#button-reset').hide();
-}
+};
 
 $('#button-reset').click(resetApplication);
 
@@ -118,5 +119,43 @@ map.on('draw:created', function (e) {
   var layer = e.layer; // The Leaflet layer for the shape
   var id = L.stamp(layer); // The unique Leaflet ID for the
 
-  console.log('Do something with the layer you just created:', layer, layer._latlng);
+  //Update markers in state object and add marker to map
+  state.markers.push([layer._latlng.lat,layer._latlng.lng]);
+  L.marker([layer._latlng.lat,layer._latlng.lng]).addTo(map);
+
+  //update count in state object
+  state.count++;
+
+  //If the count is greater than 1, show the reset button
+  if(state.count > 1){
+    $('#button-reset').show();
+    assembleQueryURL();
+  }
+
+
+  console.log(state.markers.join(';'));
 });
+
+
+
+
+
+function assembleQueryURL(){
+  var coordinates = [];
+  _.each(state.markers, function(latlong){
+    coordinates.push([latlong[1],latlong[0]]);
+  });
+  console.log("coordinates",coordinates);
+  var token = 'pk.eyJ1IjoiZnBjb3Jjb3JhbiIsImEiOiJjanUxZnhoNXAwMThyNDlsa3JuOWc0d25rIn0.cMjXP2bXQzQe2YOu2C_Cww';
+  $.ajax({
+
+    url: 'https://api.mapbox.com/optimized-trips/v1/mapbox/driving/' + coordinates.join(';') + '?access_token=' + token,
+
+    success: function(route_obj){
+      console.log(route_obj.trips);
+      var ll = decode(route_obj.trips[0].geometry);
+      state.line = L.polyline(ll).addTo(map);
+
+    }
+  });
+}
