@@ -112,11 +112,42 @@ On draw
 
 Leaflet Draw runs every time a marker is added to the map. When this happens
 ---------------- */
+function urlCoords() {
+  var coords = '';
+  state.markers.forEach(function(a) {
+    coords += a._latlng.lng + ',' + a._latlng.lat + ';';
+  });
+  return coords.substring(0, coords.length - 1);
+}
 
-map.on('draw:created', function (e) {
+function drawRoute() {
+  var accessToken = "pk.eyJ1IjoieXlmNjAwIiwiYSI6ImNqdGtmM3J6MTBhaWEzeW9pZWFpb2lyOTAifQ.stgpd_VjLxOBjSAiash8yA";
+  $.ajax({
+    url: 'https://api.mapbox.com/optimized-trips/v1/mapbox/walking/' + urlCoords() + '?access_token=' + accessToken,
+    success: function (result) {
+      var route = decode(result.trips[0].geometry);
+      state.line = L.polyline(route, {color:'tomato'}).addTo(map);
+    }
+  });
+}
+
+map.on('draw:created', function(e) {
   var type = e.layerType; // The type of shape
   var layer = e.layer; // The Leaflet layer for the shape
   var id = L.stamp(layer); // The unique Leaflet ID for the
+  var marker = L.marker(layer._latlng);
 
-  console.log('Do something with the layer you just created:', layer, layer._latlng);
+  state.count += 1;
+  state.markers.push(marker);
+  map.addLayer(marker);
+
+  if (state.count === 2) {
+    $('#button-reset').show();
+    drawRoute();
+  } else if (state.count > 2) {
+    if (state.line) {
+      map.removeLayer(state.line);
+    }
+    drawRoute();
+  }
 });
