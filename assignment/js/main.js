@@ -118,5 +118,35 @@ map.on('draw:created', function (e) {
   var layer = e.layer; // The Leaflet layer for the shape
   var id = L.stamp(layer); // The unique Leaflet ID for the
 
-  console.log('Do something with the layer you just created:', layer, layer._latlng);
+  map.addLayer(layer);
+  state.count += 1;
+  state.markers.push(layer);
+
+  if(state.count === 2){
+    findRoute();
+    $('#button-reset').show();
+  } else if(state.count > 2){
+    map.removeLayer(state.line);
+    findRoute();
+  }
 });
+
+var findRoute = function(){
+  var token = "pk.eyJ1Ijoid2psbmZnZCIsImEiOiJjanRucjJ6aXowZGxpNDRxcGVjNzNhc3hvIn0.fhwSDyC8_TIPTbLJvtF9VA";
+  $.ajax({
+    url: "https://api.mapbox.com/optimized-trips/v1/mapbox/driving/"+updatedGeometry()+
+    "?access_token="+token,
+    success: function(data){
+      var stringToPoint = decode(data.trips[0].geometry);
+      state.line = L.polyline(stringToPoint, {color: '#CC5803'}).addTo(map);
+}
+});
+};
+
+function updatedGeometry() {
+  var forPoint = "";
+  state.markers.forEach(function(data) {
+    forPoint+=data._latlng.lng+","+data._latlng.lat+";";
+  });
+  return forPoint.substring(0,forPoint.length-1);
+}
