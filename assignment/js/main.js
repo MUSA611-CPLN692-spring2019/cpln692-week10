@@ -57,6 +57,7 @@ var state = {
   line: undefined,
 }
 
+
 /** ---------------
 Map configuration
 ---------------- */
@@ -98,15 +99,39 @@ function. That being said, you are welcome to make changes if it helps.
 var resetApplication = function() {
   _.each(state.markers, function(marker) { map.removeLayer(marker) })
   map.removeLayer(state.line);
-
+  if(state.line != undefined) {
+  map.removeLayer(state.line);
+}
   state.count = 0;
   state.markers = []
   state.line = undefined;
   $('#button-reset').hide();
+  $('.leaflet-draw-draw-marker').show();
 }
 
 $('#button-reset').click(resetApplication);
 
+var getCoord = () => {
+
+  lng1 = state.markers[0].getLatLng()['lng'];
+  lat1 = state.markers[0].getLatLng()['lat'];
+  lng2 = state.markers[1].getLatLng()['lng'];
+  lat2 = state.markers[1].getLatLng()['lat'];
+  coords = lng1 + ", " + lat1 + " to " + lng2 + ", " + lat2;
+  console.log(coords);
+  return coords;
+}
+
+var routing = () => {
+  mapboxtoken = "pk.eyJ1IjoiYXN0b3JpYSIsImEiOiJjanR1aWV5aTgwdG5qNDVtcDdkcGh4bWU3In0.6LPQecMoTd7G0V0APrkg3w";
+  $.ajax({
+    url: "https://api.mapbox.com/directions/v5/mapbox/driving/" + getCoord() + ".json?access_token=" + mapboxtoken,
+    success: function(routes) {
+      var geometry = decode(routes['routes'][0]['geometry']);
+      state.line = L.polyline(geometry, {color: 'orange'}).addTo(map);
+    }
+  })
+}
 /** ---------------
 On draw
 
@@ -117,6 +142,20 @@ map.on('draw:created', function (e) {
   var type = e.layerType; // The type of shape
   var layer = e.layer; // The Leaflet layer for the shape
   var id = L.stamp(layer); // The unique Leaflet ID for the
+  console.log('Start drawing:', layer, layer._latlng);
 
-  console.log('Do something with the layer you just created:', layer, layer._latlng);
+// Draw markers
+ var marker = L.marker(layer._latlng);
+ state.count ++;
+ state.markers.push(marker);
+ console.log(state.count);
+ map.addLayer(marker);
+
+ if(state.count > 0) {
+   $('#button-reset').show(); // show the reset button when there is markers
+ }
+ if(state.count == 2 ){
+   routing();
+   $('.leaflet-draw-draw-marker').hide();
+ }
 });

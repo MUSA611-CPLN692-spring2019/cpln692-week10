@@ -22,6 +22,10 @@ body {
     padding: 20px;
 }
 
+.shape {
+  background-color: gray;
+}
+
 h1 {
     margin-bottom: 10px;
 }
