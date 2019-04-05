@@ -85,6 +85,7 @@ var drawControl = new L.Control.Draw({
   }
 });
 
+
 map.addControl(drawControl);
 
 /** ---------------
@@ -96,14 +97,14 @@ function. That being said, you are welcome to make changes if it helps.
 ---------------- */
 
 var resetApplication = function() {
-  _.each(state.markers, function(marker) { map.removeLayer(marker) })
+  _.each(state.markers, function(marker) { map.removeLayer(marker) });
   map.removeLayer(state.line);
 
   state.count = 0;
-  state.markers = []
+  state.markers = [];
   state.line = undefined;
   $('#button-reset').hide();
-}
+};
 
 $('#button-reset').click(resetApplication);
 
@@ -113,10 +114,20 @@ On draw
 Leaflet Draw runs every time a marker is added to the map. When this happens
 ---------------- */
 
+
+function getRoute  (x) {
+  var token = "pk.eyJ1Ijoic3RyZWV0ZmlnaHRzIiwiYSI6ImNqdGtlZ2QyZDM5dnozem8zMnQ0MmNxcTgifQ.4HRlIEHjijTwMlVWGkoENw";
+  //https://api.mapbox.com/directions/v5/mapbox/driving/13.43,52.51;13.42,52.5;13.41,52.5?radiuses=40;;100&geometries=polyline6&access_token=pk.eyJ1Ijoic3RyZWV0ZmlnaHRzIiwiYSI6ImNqdGtlZ2QyZDM5dnozem8zMnQ0MmNxcTgifQ.4HRlIEHjijTwMlVWGkoENw"
+}
+
 map.on('draw:created', function (e) {
   var type = e.layerType; // The type of shape
   var layer = e.layer; // The Leaflet layer for the shape
   var id = L.stamp(layer); // The unique Leaflet ID for the
 
-  console.log('Do something with the layer you just created:', layer, layer._latlng);
+  map.addLayer(layer);
+
+  state.markers.push(layer);
+  console.log(layer._latlng.lat, layer._latlng.lng);
+  var coords = 
 });
