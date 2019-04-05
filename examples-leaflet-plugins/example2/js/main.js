@@ -16,7 +16,7 @@ var Stamen_TonerLite = L.tileLayer(basemapURL, {
   ext: 'png'
 }).addTo(map);
 // Plugin. Let's add an option:
-L.Control.geocoder().addTo(map);
+L.Control.geocoder({placeholder:"Where am I"}).addTo(map);
 
 
 var url = 'https://gist.githubusercontent.com/rossbernet/739cfd731519c8b49dd063779adedbd7/raw/cb1ca853899e9833f02ca0bc272dee74937c5d0c/squaresPoly.geojson';

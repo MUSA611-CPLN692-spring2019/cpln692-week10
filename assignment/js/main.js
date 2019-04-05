@@ -112,6 +112,25 @@ On draw
 
 Leaflet Draw runs every time a marker is added to the map. When this happens
 ---------------- */
+var coordinateFlip = function () {
+  var coordinates = "";
+  state.markers.forEach(function(i) {
+    coordinates= coordinates+i._latlng.lng+","+i._latlng.lat+";";
+  });
+  return coordinates.substring(0,coordinates.length-1);
+}
+
+var token = "pk.eyJ1IjoibGFxLWFucWkiLCJhIjoiY2pzNnBoM205MGVrMDQzbXZ2NmJ6NTFnYSJ9.CEYqhti041-OUUvXOSzAOA";
+var optimizedRoute= function () {
+  $.ajax({
+    url: "https://api.mapbox.com/optimized-trips/v1/mapbox/walking/"+coordinateFlip()+"?access_token="+token,
+    success: function(routestring){
+      var coordinate = decode(routestring.trips[0].geometry);
+      state.line = L.polyline(coordinate).addTo(map);
+    }
+  });
+}
+
 
 map.on('draw:created', function (e) {
   var type = e.layerType; // The type of shape
@@ -119,4 +138,20 @@ map.on('draw:created', function (e) {
   var id = L.stamp(layer); // The unique Leaflet ID for the
 
   console.log('Do something with the layer you just created:', layer, layer._latlng);
+
+  var marker = L.marker(layer._latlng);
+
+  state.count= state.count+1;
+  state.markers.push(marker);
+  map.addLayer(marker);
+
+  if (state.count==2) {
+    optimizedRoute();
+    $('#button-reset').show();
+  } else if (state.count>2) {
+    if (state.line) {
+      map.removeLayer(state.line)
+    };
+    optimizedRoute();
+  }
 });
