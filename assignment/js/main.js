@@ -100,10 +100,10 @@ var resetApplication = function() {
   map.removeLayer(state.line);
 
   state.count = 0;
-  state.markers = []
+  state.markers = [];
   state.line = undefined;
   $('#button-reset').hide();
-}
+};
 
 $('#button-reset').click(resetApplication);
 
@@ -112,11 +112,39 @@ On draw
 
 Leaflet Draw runs every time a marker is added to the map. When this happens
 ---------------- */
+var getCoor = function() {
+  var coor = "";
+  _.each(state.markers,function(marker) {
+    coor += marker._latlng.lng+","+marker._latlng.lat+";";
+  });
+  return coor.substring(0,coor.length-1);
+};
+
+var getRoute = function () {
+  $.ajax("https://api.mapbox.com/optimized-trips/v1/mapbox/driving/"+getCoor()+
+  "?access_token=pk.eyJ1Ijoienh1YW54dSIsImEiOiJjanU0ODgxN3UwdmNtNDRvYm5mZmg0OWRpIn0.jDHEx7lWmzRBMqx2xHZ8-w").done(function(data){
+      var route = decode(data.trips[0].geometry);
+      state.line = L.polyline(route, {color: 'tomato'}).addTo(map);
+    });
+  };
 
 map.on('draw:created', function (e) {
   var type = e.layerType; // The type of shape
   var layer = e.layer; // The Leaflet layer for the shape
-  var id = L.stamp(layer); // The unique Leaflet ID for the
-
+  var id = L.stamp(layer); // The unique Leaflet ID for the shape
+  var marker = L.marker(layer._latlng);
+  state.count+=1;
+  state.markers.push(marker);
+  map.addLayer(marker);
+  if (state.count==2) {
+    getRoute();
+    $('#button-reset').show();
+  }
+  else if(state.count>2) {
+    if (state.line != null) {
+      map.removeLayer(state.line);
+    }
+  getRoute();
+  }
   console.log('Do something with the layer you just created:', layer, layer._latlng);
 });
