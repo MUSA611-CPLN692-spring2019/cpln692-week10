@@ -112,11 +112,31 @@ On draw
 
 Leaflet Draw runs every time a marker is added to the map. When this happens
 ---------------- */
+var access = "pk.eyJ1IjoieHVhbjk2IiwiYSI6ImNqdTNnZ216YzBuM3M0ZHBlZjJ0ZTJ6MnoifQ.fzF7dByoN7k9L1pcyVSlwA"
+var walkroute = function(){
+  $.ajax({
+     url: "https://api.mapbox.com/optimized-trips/v1/mapbox/walking/"+state.markers[0].coordinates+";"+state.markers[1].coordinates+"?access_token="+access,
+     success: function(result){
+      var latlngs = decode(result.trips[0].geometry);
+      state.line = L.polyline(latlngs, {color: 'red'}).addTo(map);
+  }
+})
+};
 
 map.on('draw:created', function (e) {
   var type = e.layerType; // The type of shape
   var layer = e.layer; // The Leaflet layer for the shape
   var id = L.stamp(layer); // The unique Leaflet ID for the
-
-  console.log('Do something with the layer you just created:', layer, layer._latlng);
+  map.addLayer(layer);
+  state.count+=1;
+  state.markers.push(layer);
+  //set up semicolon-separated list coordinates for url
+  for (i=0; i<state.markers.length; i++){
+    state.markers[i].coordinates = state.markers[i]._latlng.lng+","+state.markers[i]._latlng.lat};
+    //
+    if (state.count==2){
+      walkroute();
+      $('#button-reset').show()}
+    else if (state.count>2){
+      if (state.line){ map.removeLayer(state.line);}}
 });
