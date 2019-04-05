@@ -21,10 +21,6 @@ optimized_route API. The text you send to the API should be formatted like this:
 
 
 ## Decoding the route
-The part of the response we need for drawing the route is the shape property. Unfortunately, it's in
-a format we can't use directly. It will be a string that looks something like this:
-
-`ee~jkApakppCmPjB}TfCuaBbQa|@lJsd@dF|Dl~@pBfb@t@bQ?tEOtEe@vCs@xBuEfNkGdPMl@oNl^eFxMyLrZoDlJ{JhW}JxWuEjL]z@mJlUeAhC}Tzi@kAv`...
 
 Note that the file `decode.js` is included, which introduces a function `decode`. If you pass the
 shape string to the `decode` function, it will return an array of points in [lat, lng] format.
@@ -54,8 +50,8 @@ them from the map when we need to reset the map.
 var state = {
   count: 0,
   markers: [],
-  line: undefined,
-}
+  line: undefined
+};
 
 /** ---------------
 Map configuration
@@ -74,6 +70,7 @@ var Stamen_TonerLite = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{
 /** ---------------
 Leaflet Draw configuration
 ---------------- */
+var newLayer = new L.FeatureGroup();
 
 var drawControl = new L.Control.Draw({
   draw: {
@@ -82,10 +79,81 @@ var drawControl = new L.Control.Draw({
     circle: false,
     marker: true,
     rectangle: false,
+  },
+  edit: {
+    featureGroup: newLayer
   }
 });
 
 map.addControl(drawControl);
+
+var marker1;
+var marker2;
+
+
+var coordinates = '';
+var getRouteAPI1 = 'https://api.mapbox.com/directions/v5/mapbox/walking/';
+var getRouteAPI2 = '?approaches=unrestricted;curb&access_token=pk.eyJ1Ijoicm9jaGlubmVyIiwiYSI6ImNpdjdraTF0bDAwMTEydG04d2x3cGxidGgifQ.mVnp9OqAHCylzC_RqOXg7A';
+var getRouteAPI = '';
+// var myRoute = '';
+
+// how to extract from the response only the text and use decode()
+// var getAndParseRoute = function() {
+//   $.ajax(getRouteAPI).done(function(res) {
+//       myRoute = JSON.stringify(res);
+//     });
+//   };
+
+
+function getAndMapRoute() {
+  $.ajax({
+    url: getRouteAPI,
+    success: function(res) {
+      console.log(res);
+      var latlngs = decode(res.routes[0].geometry);
+      state.line = L.polyline(latlngs, {color: 'black'}).addTo(map);
+    }
+    // success: function(res){
+    //   var latlngs = decode(res.trips[0].geometry);
+    //   state.line = L.polyline(latlngs, {color: 'black'}).addTo(map);
+    // }
+  });
+}
+
+map.on(L.Draw.Event.CREATED, function (e) {
+  // console.log(e.layer);
+  $('#button-reset').show();
+  var newData = e.layer.toGeoJSON();
+  var lat = newData.geometry.coordinates[1];
+  var lng = newData.geometry.coordinates[0];
+
+  // console.log(newData);
+
+  if (state.count == 0) {
+        marker1 = L.geoJSON(newData).addTo(map);
+        console.log(marker1);
+        // map.addLayer(e.layer);
+        state.markers.push([lat,lng]);
+        // console.log(state.markers);
+        state.count = state.count + 1;
+    } else if (state.count == 1) {
+        marker2 = L.geoJSON(newData).addTo(map);
+        state.markers.push([lat,lng]);
+        // console.log(state.markers);
+        coordinates =String(state.markers[0][1]) +','+ String(state.markers[0][0]) +';'+
+                String(state.markers[1][1]) +','+ String(state.markers[1][0]);
+        getRouteAPI = getRouteAPI1.concat(coordinates, getRouteAPI2);
+        getAndMapRoute();
+        state.count = state.count + 1;
+    } else {
+      console.log('Exceed maximum points');
+      console.log(state.markers);
+    }
+    });
+
+
+
+
 
 /** ---------------
 Reset application
@@ -96,14 +164,24 @@ function. That being said, you are welcome to make changes if it helps.
 ---------------- */
 
 var resetApplication = function() {
-  _.each(state.markers, function(marker) { map.removeLayer(marker) })
-  map.removeLayer(state.line);
+  // _.each(state.markers, function(m) {
+  //     map.removeLayer(m);
+  // });
+  // map.removeLayer(state.line);
+  if (state.count == 1) {
+    map.removeLayer(marker1);
+  }
+  else if (state.count >= 2) {
+    map.removeLayer(marker1);
+    map.removeLayer(marker2);
+    map.removeLayer(state.line);
+  }
 
   state.count = 0;
-  state.markers = []
+  state.markers = [];
   state.line = undefined;
   $('#button-reset').hide();
-}
+};
 
 $('#button-reset').click(resetApplication);
 
