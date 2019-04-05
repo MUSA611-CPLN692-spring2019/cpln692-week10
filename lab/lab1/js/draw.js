@@ -70,24 +70,63 @@ Moving your mouse outside of the circle should remove the highlighting.
 ===================== */
 
 // Global Variables
-var myRectangle;
 
-// Initialize Leaflet Draw
-var drawControl = new L.Control.Draw({
-  draw: {
-    polyline: false,
-    polygon: false,
-    circle: false,
-    marker: false,
-    rectangle: true,
-  }
+var myRectangle = new L.FeatureGroup();
+map.addLayer(myRectangle);
+
+var drawControlFull = new L.Control.Draw({
+    edit: {
+        featureGroup: myRectangle
+    },
+    draw: {
+        polyline: false
+    }
 });
 
-map.addControl(drawControl);
+map.addControl(drawControlFull);
 
+function removeMe(id) {
+	myRectangle.eachLayer(function (layer) {
+		if (layer._leaflet_id === id){
+			myRectangle.removeLayer(layer);
+		}
+	});
+}
 // Event which is run every time Leaflet draw creates a new layer
-map.on('draw:created', function (e) {
-    var type = e.layerType; // The type of shape
-    var layer = e.layer; // The Leaflet layer for the shape
-    var id = L.stamp(layer); // The unique Leaflet ID for the layer
+map.on("draw:created", function (e) {
+  var type = e.layerType; // The type of shape
+  var layer = e.layer; // The Leaflet layer for the shape
+  var id = L.stamp(layer); // The unique Leaflet ID for the layer
+    layer.addTo(myRectangle);
+    if (myRectangle.getLayers().length === 1){
+    console.log(id);
+    //id1=id;
+    $('#shapes').append(`<div class="shape" data-leaflet-id=${id}><h1>Current ID: ${id}</h1></div>`);
+  }
+    if (myRectangle.getLayers().length === 2){
+      console.log(id);
+         //removeMe(id1);
+         //$('#shapes').empty();
+         //id1=id;
+         $('#shapes').append(`<div class="shape" data-leaflet-id=${id}><h1>Current ID: ${id}</h1></div>`);
+     }
 });
+
+/*$('#shapes')
+  .css('cursor', 'pointer')
+  .click(
+    function(e){
+      thisid=e['data-leaflet-id'];
+     removeMe(thisid);
+    }
+  )
+  .hover(
+    function(e){
+      thisid=e['data-leaflet-id'];
+      myRectangle.eachLayer(function (layer) {
+    		if (layer._leaflet_id === thisid){
+    			layer.css('background', '#ff00ff');
+    		}
+    	});
+    }
+  );*/
