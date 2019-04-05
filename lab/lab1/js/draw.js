@@ -90,4 +90,28 @@ map.on('draw:created', function (e) {
     var type = e.layerType; // The type of shape
     var layer = e.layer; // The Leaflet layer for the shape
     var id = L.stamp(layer); // The unique Leaflet ID for the layer
+
+//Task 2: Add rectangles to map
+    map.addLayer(layer);
+
+//Task 3: Limit to one rectangle
+if (type === "rectangle") {
+  if (myRectangle) {
+    map.removeLayer(myRectangle);
+  }
+  myRectangle = layer;
+  map.addLayer(myRectangle);
+}
+
+//Task 4: Add shape to sidebar
+if (type === "rectangle") {
+  if (myRectangle) {
+    map.removeLayer(myRectangle);
+  };
+  myRectangle = layer;
+  map.addLayer(myRectangle);
+  $('#shapes').empty();
+  $('#shapes').append( "<div class='shape' data-leaflet-id='"+ L.stamp(layer) +"'><h1>Current ID: "+ L.stamp(layer) +"</h1></div>" );
+  }
+
 });
