@@ -128,8 +128,13 @@ var state = {
 /* We'll use underscore's `once` function to make sure this only happens
  *  one time even if weupdate the position later
  */
+
+var myOrigin;
+var myLocations = [];
+
 var goToOrigin = _.once(function(lat, lng) {
   map.flyTo([lat, lng], 14);
+  myOrigin=[lat,lng];
 });
 
 
@@ -166,12 +171,30 @@ $(document).ready(function() {
     }
   });
 
+  var myDestination;
+  var routeResponse;
+  var routeCoordinates;
+  var myCoordinates;
+
   // click handler for the "calculate" button (probably you want to do something with this)
   $("#calculate").click(function(e) {
     var dest = $('#dest').val();
-    console.log(dest);
+    // console.log(dest);
+    var myURL1="https://api.mapbox.com/geocoding/v5/mapbox.places/" + dest + ".json?access_token=pk.eyJ1IjoicmVwYXJvIiwiYSI6ImNqdGtlaW5ubzAyNzk0M3BoaWtjNTRkcG0ifQ.zIoid_0qjvLcr2fTtyxhxQ";
+
+    myDestination = $.ajax(myURL1);
+    myDestination.done(function(data){
+      myLocations.push({"lat":data.features[0].geometry.coordinates[1],"lon":data.features[0].geometry.coordinates[0]});
+    });
+
+    var myURL2="https://api.mapbox.com/optimized-trips/v1/mapbox/driving/" + myLocations[0] + "," + myLocations[1] + ";" + myOrigin[1] + "," + myOrigin[0] + "?access_token=pk.eyJ1IjoicmVwYXJvIiwiYSI6ImNqdGtlaW5ubzAyNzk0M3BoaWtjNTRkcG0ifQ.zIoid_0qjvLcr2fTtyxhxQ";
+
+    routeResponse = $.ajax(myURL2);
+    routeResponse.done(function(data){
+      routeCoordinates = data.trips[0].geometry;
+      myCoordinates = decode(routeCoordinates);
+      var myRoute = L.polyline(myCoordinates, {color:'#f4d142'}).addTo(map);
+    });
   });
 
 });
-
-

@@ -103,7 +103,7 @@ var resetApplication = function() {
   state.markers = []
   state.line = undefined;
   $('#button-reset').hide();
-}
+};
 
 $('#button-reset').click(resetApplication);
 
@@ -112,11 +112,51 @@ On draw
 
 Leaflet Draw runs every time a marker is added to the map. When this happens
 ---------------- */
+var coordinatesURL = function () {
+  var coordinates = "";
+  _.each(state.markers, function(e) {
+    coordinates += e._latlng.lng + "," + e._latlng.lat + ";";
+  });
+  return coordinates.substring(0,coordinates.length-1);
+};
+
+var drawRoute = function() {
+  // var url="http://api.mapbox.com/optimized-trips/v1/mapbox/driving/" + coordinatesURL() + "?access_token=pk.eyJ1IjoicmVwYXJvIiwiYSI6ImNqdGtlaW5ubzAyNzk0M3BoaWtjNTRkcG0ifQ.zIoid_0qjvLcr2fTtyxhxQ";
+  // var latlngs;
+  // $.ajax(url).done(function(res) {
+  //   latlngs=decode(res.trips[0].geometry);
+  //   state.line=L.polyline(latlngs, {color: 'blue'}).addTo(map);
+  // })
+  $.ajax({
+    url: "https://api.mapbox.com/optimized-trips/v1/mapbox/driving/" + coordinatesURL() + "?access_token=pk.eyJ1IjoicmVwYXJvIiwiYSI6ImNqdGtlaW5ubzAyNzk0M3BoaWtjNTRkcG0ifQ.zIoid_0qjvLcr2fTtyxhxQ",
+    success: function(res) {
+      var latlngs = decode(res.trips[0].geometry);
+      state.line=L.polyline(latlngs, {color: 'blue'}).addTo(map);
+    }
+  })
+};
 
 map.on('draw:created', function (e) {
   var type = e.layerType; // The type of shape
   var layer = e.layer; // The Leaflet layer for the shape
   var id = L.stamp(layer); // The unique Leaflet ID for the
 
-  console.log('Do something with the layer you just created:', layer, layer._latlng);
+  // console.log('Do something with the layer you just created:', layer, layer._latlng);
+
+  if (type === 'marker') {
+    state.count += 1;
+    state.markers.push(layer);
+    map.addLayer(layer);
+
+    if (state.count == 2) {
+      $('#button-reset').show();
+      drawRoute();
+    } else if(state.count > 2) {
+      if (state.line) {
+        map.removeLayer(state.line);
+        drawRoute();
+      }
+    }
+  };
+
 });

@@ -17,7 +17,11 @@ var Stamen_TonerLite = L.tileLayer(basemapURL, {
 }).addTo(map);
 
 // Plugin control:
-
+newSlider = L.control.slider(
+  function(value) {
+    console.log(value);
+  })
+  .addTo(map);
 
 
 
