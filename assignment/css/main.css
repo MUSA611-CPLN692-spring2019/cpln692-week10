@@ -8,11 +8,6 @@ body {
     font-family: helvetica, arial, sans-serif;
 }
 
-.school {
-  background-color: #ccc;
-  margin-bottom: 10px;
-  padding: 10px;
-}
 
 #map {
     position: absolute;
@@ -20,18 +15,23 @@ body {
     left: 0;
     height: 100%;
     top: 0;
+    z-index: 1;
 }
 
 #button-reset {
-  background-color: tomato;
-  padding: 10px;
   position: absolute;
-  top: 10px;
-  left: 54px;
-  z-index: 2000;
+  top: auto;
+  left:20px;
+  right: auto;
+  bottom: 20px;
+  background-color: #1c6fb9;
+  margin: auto;
+  padding: 11px 22px;
+  text-align: center;
+  z-index: 100;
   border: 0;
   border-radius: 3px;
   color: #fff;
   font-weight: 900;
-  display: none;
+  display: block;
 }
