@@ -54,7 +54,7 @@ Task 6 (Stretch Goal): Connect sidebar and map
 
 The HTML in the sidebar and the Leaflet layers on the map and in our Javascript
 variable can be linked by using the Leaflet ID. Modify the application so that
-clicking on a shape in the sidebar will do one of the following:
+ clicking on a shape in the sidebar will do one of the following:
 
 - Change the color of the corresponding shape on the map
 - Delete the corresponding shape on the map (be sure to remove it from the
@@ -76,18 +76,39 @@ var myRectangle;
 var drawControl = new L.Control.Draw({
   draw: {
     polyline: false,
-    polygon: false,
-    circle: false,
+    polygon: true,
+    circle: true,
     marker: false,
     rectangle: true,
   }
 });
-
 map.addControl(drawControl);
+
 
 // Event which is run every time Leaflet draw creates a new layer
 map.on('draw:created', function (e) {
-    var type = e.layerType; // The type of shape
-    var layer = e.layer; // The Leaflet layer for the shape
-    var id = L.stamp(layer); // The unique Leaflet ID for the layer
+  //check if there is info in myRectangle variable
+  if (myRectangle) {
+    //if there is info - remove the layer myRectangle
+    map.removeLayer(myRectangle);
+    //if there is info - empty the shapes element
+    $("#shapes").empty();
+  }
+
+  var type = e.layerType; // The type of shape
+  var layer = e.layer; // The Leaflet layer for the shape
+  var id = L.stamp(layer); // The unique Leaflet ID for the layer
+
+  //store layer info in myRectangle variable
+  myRectangle = layer;
+  //add layer to map
+  map.addLayer(myRectangle);
+
+  //add leaflet id information
+  //method 1
+  $("#shapes").append('<div class="shape" data-leaflet-id=' + id + '><h1>Current ID:' + id + '</h1></div>');
+  // method 2
+  //$("#shapes").append('<div id="leafletID" ></div>');
+  //$("#leafletID").append("<h1>Current ID: " + id + "</h1>");
+
 });
