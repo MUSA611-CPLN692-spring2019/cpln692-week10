@@ -86,8 +86,16 @@ var drawControl = new L.Control.Draw({
 map.addControl(drawControl);
 
 // Event which is run every time Leaflet draw creates a new layer
-map.on('draw:created', function (e) {
-    var type = e.layerType; // The type of shape
-    var layer = e.layer; // The Leaflet layer for the shape
-    var id = L.stamp(layer); // The unique Leaflet ID for the layer
+map.on('draw:created', function(e) {
+  if (myRectangle != null) {
+
+  }
+  var type = e.layerType; // The type of shape
+  var layer = e.layer; // The Leaflet layer for the shape
+  var id = L.stamp(layer); // The unique Leaflet ID for the layer
+  myRectangle = id;
+  console.log(myRectangle);
+  if (type == 'rectangle') {
+    map.addLayer(layer);
+  }
 });
