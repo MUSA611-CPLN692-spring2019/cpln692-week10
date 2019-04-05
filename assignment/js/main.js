@@ -121,7 +121,7 @@ var urlCoords = ( m ) => {
 }
 
 var mapRoute = () => {
-	var access = "pk.eyJ1IjoibWF5dXRhbmFrYSIsImEiOiJjajhieGJ4N3gwMzgzMzNtb2tmMDFiMHJlIn0.qCJLeV-KUvxpAO38a9dPtA";
+	var access = "pk.eyJ1IjoiamlhbmdzdXRvbmciLCJhIjoiY2lwdDdpODF3MDAyZmh3a3NkNzMzZmwyeCJ9.a1S2KdfTkeKOzCOiSZpYrQ";
 	$.ajax( {
 		url: "https://api.mapbox.com/optimized-trips/v1/mapbox/driving/" + urlCoords() + "?access_token=" + access,
 		success: function ( result ) {
