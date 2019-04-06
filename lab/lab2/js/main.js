@@ -144,11 +144,15 @@ var updatePosition = function(lat, lng, updated) {
   goToOrigin(lat, lng);
 };
 
+var origin ={"lat":0,"lon":0};
+
 $(document).ready(function() {
   /* This 'if' check allows us to safely ask for the user's current position */
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(function(position) {
       updatePosition(position.coords.latitude, position.coords.longitude, position.timestamp);
+      origin.lat=position.coords.latitude;
+      origin.lon=position.coords.longitude;
     });
   } else {
     alert("Unable to access geolocation API!");
@@ -170,8 +174,28 @@ $(document).ready(function() {
   $("#calculate").click(function(e) {
     var dest = $('#dest').val();
     console.log(dest);
+    var myToken = "pk.eyJ1IjoibHVmZW5nbGluIiwiYSI6ImNqcGE0eWdxdTFtZmUzcHFzcTV6OW40cHIifQ.JZFzns7G90tC3m6AgYzi7w";
+    var destURL = "https://api.mapbox.com/geocoding/v5/mapbox.places/" +dest +".json?access_token="+myToken;
+    $.ajax(destURL).done(function(dests){
+      _.map(dests.features,function(dest){
+    L.circleMarker([dest.geometry.coordinates[1],dest.geometry.coordinates[0]], {color: "red"}).addTo(map);
+    var destlat = dest.geometry.coordinates[1];
+    var destlon = dest.geometry.coordinates[0];
+    var routeURL = 'https://api.mapbox.com/directions/v5/mapbox/driving/' + origin.lon + ',' + origin.lat + ';' + destlon + ',' + destlat + '?geometries=polyline&access_token='+myToken;
+    $.ajax(routeURL).done(function(routes){
+      var routePoints = decode(routes.routes[0].geometry);
+      var revisedPoints = _.map(routePoints,function(point){
+        return [point[1],point[0]];
+      });
+      var route = turf.lineString(revisedPoints);
+      console.log(route);
+      var myStyle = {
+        "color": "blue"
+      };
+      L.geoJson(route,{style:myStyle}).addTo(map);
+    });
+});
+});
   });
 
 });
-
-
