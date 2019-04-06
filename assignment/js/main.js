@@ -96,16 +96,80 @@ function. That being said, you are welcome to make changes if it helps.
 ---------------- */
 
 var resetApplication = function() {
-  _.each(state.markers, function(marker) { map.removeLayer(marker) })
-  map.removeLayer(state.line);
+  state.markers.forEach(function(marker) { map.removeLayer(marker) });
+  if(state.line) {map.removeLayer(state.line);}
 
-  state.count = 0;
   state.markers = []
   state.line = undefined;
-  $('#button-reset').hide();
+
+  $('.leaflet-draw-draw-marker').removeClass('disabled');
+  $('.button-reset').addClass('disabled');
+
 }
 
-$('#button-reset').click(resetApplication);
+$('.leaflet-top.leaflet-left').append(`
+  <div class="reset-section leaflet-control">
+    <div class="leaflet-bar">
+      <span title="Clear route">
+      <a class="button-reset disabled" href="#">
+        &#x2715;
+      </a>
+      </span>
+    </div>
+    <ul class="reset-popup-parent leaflet-draw-actions leaflet-draw-actions-top leaflet-draw-actions-bottom" style="top: 1px; display: none;">
+      <li>
+        <a class="reset-popup" href="#" title="Clear route">
+          Clear route
+        </a>
+      </li>
+    </ul>
+  </div>
+`);
+$("body").click(function() {
+  let parent = $('.reset-popup-parent');
+  let display = parent.css('display');
+  if (display == 'block') {parent.css('display','none');}
+})
+$('.button-reset').click(function(e) {
+  e.stopPropagation();
+  let parent = $('.reset-popup-parent');
+  let display = parent.css('display');
+  if (display == 'none') {parent.css('display','block');}
+  if (display == 'block') {parent.css('display','none');}
+});
+$('.reset-popup').click(function(e) {
+  resetApplication();
+});
+
+/** ---------------
+Create route from coordinates
+---------------- */
+var route = function(map,markers,line) {
+
+  if (markers.length === 1) {return;}
+  if (markers.length > 2) {
+    map.removeLayer(line);
+  }
+
+  let coords = '';
+  markers.forEach(function(layer) {
+    coords += layer._latlng.lng + ',' + layer._latlng.lat + ';';
+  });
+  coords = coords.substring(0,coords.length-1);
+  url = "https://api.mapbox.com/directions/v5/mapbox/driving/" + coords + "?access_token=pk.eyJ1Ijoiam9ub3l1YW4iLCJhIjoiY2p0a2Yza3B0MGFmYzQ0azZ6N3Fpa3lzZCJ9.psMUwWS3BJLfS_C0CwJTHQ";
+
+  $('.leaflet-draw-draw-marker').addClass('disabled');
+  $.ajax({
+    url: url,
+    success: function(rsp) {
+      let dirs = decode(rsp.routes[0].geometry);
+      out = L.polyline(dirs);
+      $('.leaflet-draw-draw-marker').removeClass('disabled');
+      state.line = out.addTo(map); // async
+    }
+  });
+  // return out; // sync??
+};
 
 /** ---------------
 On draw
@@ -114,9 +178,17 @@ Leaflet Draw runs every time a marker is added to the map. When this happens
 ---------------- */
 
 map.on('draw:created', function (e) {
-  var type = e.layerType; // The type of shape
-  var layer = e.layer; // The Leaflet layer for the shape
-  var id = L.stamp(layer); // The unique Leaflet ID for the
+  let type = e.layerType;
+  let layer = e.layer;
+  let id = L.stamp(layer);
 
-  console.log('Do something with the layer you just created:', layer, layer._latlng);
+  if (type === 'marker') {
+    state.markers.push(layer);
+    map.addLayer(layer);
+    // state.line = route(map,state.markers,state.line).addTo(map); // sync??
+    route(map,state.markers,state.line); // async
+  }
+
+  $('.button-reset').removeClass('disabled');
+  throw "dummy error: this allows drawing a chain of markers.";
 });
