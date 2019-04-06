@@ -55,7 +55,7 @@ var state = {
   count: 0,
   markers: [],
   line: undefined,
-}
+};
 
 /** ---------------
 Map configuration
@@ -96,14 +96,17 @@ function. That being said, you are welcome to make changes if it helps.
 ---------------- */
 
 var resetApplication = function() {
-  _.each(state.markers, function(marker) { map.removeLayer(marker) })
+  _.each(state.markers, function(marker) {
+    map.removeLayer(marker);
+  });
   map.removeLayer(state.line);
 
   state.count = 0;
-  state.markers = []
+  state.markers = [];
   state.line = undefined;
   $('#button-reset').hide();
-}
+  map.addControl(drawControl);
+};
 
 $('#button-reset').click(resetApplication);
 
@@ -112,11 +115,63 @@ On draw
 
 Leaflet Draw runs every time a marker is added to the map. When this happens
 ---------------- */
+// Generate the string to send to Mapbox API
+var generateString = function() {
+  var coordstring = '';
+  state.markers.forEach(function(o) {
+    //console.log(o._latlng.lng);
+    coordstring = coordstring + o._latlng.lng + "," + o._latlng.lat + ';';
+  });
+  coordstring = coordstring.substring(0, coordstring.length - 1); // Get rid of the last ";"
+  //console.log(coordstring);
+  return coordstring;
+};
 
-map.on('draw:created', function (e) {
+// Send the ajax request and return the direction line
+var getRoute = function() {
+  var token = "?access_token=pk.eyJ1IjoiYWxleDBlYXN5IiwiYSI6ImNqdGtmM3p0aDBjMjk0NHVvZHlwa29mdnYifQ.7V5_Hbxoh4KWZElnFQFrxA";
+  var address = "https://api.mapbox.com/optimized-trips/v1/mapbox/driving/";
+  var url = address + generateString() + token;
+  $.ajax(url).done(function(o) {
+    var decoded = decode(o.trips[0].geometry);
+    state.line = L.polyline(decoded).addTo(map);
+  });
+};
+
+// Calls on the function above to draw the line
+var drawOnState = function(num) {
+  if (num >= 2) {
+    if (num > 2) {
+      map.removeLayer(state.line);
+    }; // Removes the previous route after the 3rd marker
+    $('#button-reset').show();
+    getRoute();
+  };
+};
+
+// Adds 1 to count, adds the marker to marker list, adds the marker to the map itself.
+var addMarker = function(mk) {
+  state.count++;
+  state.markers.push(mk);
+  map.addLayer(mk);
+};
+
+// Runs everytime a marker is created
+map.on('draw:created', function(e) {
   var type = e.layerType; // The type of shape
   var layer = e.layer; // The Leaflet layer for the shape
   var id = L.stamp(layer); // The unique Leaflet ID for the
 
-  console.log('Do something with the layer you just created:', layer, layer._latlng);
+  var marker = L.marker(layer._latlng);
+  addMarker(marker);
+
+  if (state.count < 12) {
+    drawOnState(state.count);
+  } else {
+    alert('Max waypoints reached, cannot add new waypoints.');
+    map.removeControl(drawControl);
+    drawOnState(state.count);
+  };
+  // Generates a warning when reaches 12 markers (max number of waypoints the api can handle
+  // according to the api documents), and removes the marker adder.
 });
