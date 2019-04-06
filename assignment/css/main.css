@@ -8,6 +8,12 @@ body {
     font-family: helvetica, arial, sans-serif;
 }
 
+a.disabled {
+  pointer-events: none;
+  cursor: default;
+  opacity:0.5;
+}
+
 .school {
   background-color: #ccc;
   margin-bottom: 10px;
@@ -22,16 +28,8 @@ body {
     top: 0;
 }
 
-#button-reset {
-  background-color: tomato;
-  padding: 10px;
-  position: absolute;
-  top: 10px;
-  left: 54px;
-  z-index: 2000;
-  border: 0;
-  border-radius: 3px;
-  color: #fff;
-  font-weight: 900;
-  display: none;
+.button-reset {
+  font-weight:bold;
 }
+
+.reset-popup {padding:6px 10px;}
