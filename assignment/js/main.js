@@ -55,7 +55,7 @@ var state = {
   count: 0,
   markers: [],
   line: undefined,
-}
+};
 
 /** ---------------
 Map configuration
@@ -98,7 +98,7 @@ function. That being said, you are welcome to make changes if it helps.
 
 var resetApplication = function() {
   _.each(state.markers, function(marker) { map.removeLayer(marker) });
-  map.removeLayer(state.line);
+  if (state.line) {map.removeLayer(state.line);}
 
   state.count = 0;
   state.markers = [];
@@ -115,9 +115,27 @@ Leaflet Draw runs every time a marker is added to the map. When this happens
 ---------------- */
 
 
-function getRoute  (x) {
+function getRoute (x) {
+
+  var coords = "";
+   _.each(state.markers, function(layer) {
+    coords += layer._latlng.lng + "," + layer._latlng.lat + ";";
+  });
+    coords = coords.substring(0 , coords.length-1);
+    console.log("Here are your route coordinates: " + coords);
+
   var token = "pk.eyJ1Ijoic3RyZWV0ZmlnaHRzIiwiYSI6ImNqdGtlZ2QyZDM5dnozem8zMnQ0MmNxcTgifQ.4HRlIEHjijTwMlVWGkoENw";
-  //https://api.mapbox.com/directions/v5/mapbox/driving/13.43,52.51;13.42,52.5;13.41,52.5?radiuses=40;;100&geometries=polyline6&access_token=pk.eyJ1Ijoic3RyZWV0ZmlnaHRzIiwiYSI6ImNqdGtlZ2QyZDM5dnozem8zMnQ0MmNxcTgifQ.4HRlIEHjijTwMlVWGkoENw"
+   $.ajax({
+     url: "https://api.mapbox.com/optimized-trips/v1/mapbox/driving/" + coords + "?access_token=" + token,
+     success: function(route) {
+       var result = decode(route.trips[0].geometry);
+       state.line = L.polyline(result, {
+         color: "black",
+         weight: 3,
+         opacity: 0.6,
+       }).addTo(map);
+     }
+   });
 }
 
 map.on('draw:created', function (e) {
@@ -125,9 +143,22 @@ map.on('draw:created', function (e) {
   var layer = e.layer; // The Leaflet layer for the shape
   var id = L.stamp(layer); // The unique Leaflet ID for the
 
-  map.addLayer(layer);
+  var marker = L.marker(layer._latlng);
 
-  state.markers.push(layer);
-  console.log(layer._latlng.lat, layer._latlng.lng);
-  var coords = 
+    state.count ++;
+    state.markers.push(marker);
+    console.log("A single marker: " + layer._latlng.lat, layer._latlng.lng);
+    map.addLayer(marker);
+
+  if (state.count > 0) {
+    $('#button-reset').show(); // show if any markers are on the map
+  }
+
+  if (state.count == 2) {
+    getRoute();
+  } else if (state.count > 2) {
+    if (state.line) { map.removeLayer(state.line); } // removes overlapping line when adding adddional markers
+    console.log("Dang, you're busy.");
+    getRoute();
+  }
 });

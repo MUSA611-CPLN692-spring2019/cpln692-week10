@@ -23,7 +23,7 @@ body {
 }
 
 #button-reset {
-  background-color: tomato;
+  background-color: black;
   padding: 10px;
   position: absolute;
   top: 10px;
@@ -32,6 +32,7 @@ body {
   border: 0;
   border-radius: 3px;
   color: #fff;
-  font-weight: 900;
+  font-weight: 700;
   display: none;
+  opacity: 0.6;
 }
