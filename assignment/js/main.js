@@ -120,8 +120,9 @@ map.on('draw:created', function (e) {
   var id = L.stamp(layer); // The unique Leaflet ID for the
 
   //Update markers in state object and add marker to map
-  state.markers.push([layer._latlng.lat,layer._latlng.lng]);
-  L.marker([layer._latlng.lat,layer._latlng.lng]).addTo(map);
+  var marker = L.marker([layer._latlng.lat,layer._latlng.lng]).addTo(map);
+  console.log(marker);
+  state.markers.push(marker);
 
   //update count in state object
   state.count++;
@@ -134,6 +135,7 @@ map.on('draw:created', function (e) {
 
 
   console.log(state.markers.join(';'));
+  console.log(state.markers);
 });
 
 
@@ -142,10 +144,13 @@ map.on('draw:created', function (e) {
 
 function assembleQueryURL(){
   var coordinates = [];
-  _.each(state.markers, function(latlong){
-    coordinates.push([latlong[1],latlong[0]]);
+  _.each(state.markers._latlng, function(latlong){
+    console.log("latlong",latlong);
+    console.log("Success");
+
+    coordinates.push([latlong.lng,latlong.lat]);
   });
-  console.log("coordinates",coordinates);
+  //console.log("coordinates",coordinates);
   var token = 'pk.eyJ1IjoiZnBjb3Jjb3JhbiIsImEiOiJjanUxZnhoNXAwMThyNDlsa3JuOWc0d25rIn0.cMjXP2bXQzQe2YOu2C_Cww';
   $.ajax({
 
