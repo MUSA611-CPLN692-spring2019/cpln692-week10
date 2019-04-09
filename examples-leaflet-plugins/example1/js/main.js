@@ -21,5 +21,9 @@ var url = 'https://gist.githubusercontent.com/rossbernet/739cfd731519c8b49dd0637
 var jsondata;
 $.ajax(url).done(function(res) {
   jsondata = JSON.parse(res);
-  layer = L.geoJSON(jsondata).addTo(map)
+  layer = L.geoJSON(jsondata).addTo(map);
 });
+
+var lc = L.control.locate({
+  postition: 'top right'
+}).addTo(map);
