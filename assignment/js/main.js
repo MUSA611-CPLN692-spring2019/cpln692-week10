@@ -84,8 +84,35 @@ var drawControl = new L.Control.Draw({
     rectangle: false,
   }
 });
-
 map.addControl(drawControl);
+
+/** ---------------
+assembly of URL for ajax call
+---------------- */
+var access = "pk.eyJ1IjoieHVhbjk2IiwiYSI6ImNqdTNnZ216YzBuM3M0ZHBlZjJ0ZTJ6MnoifQ.fzF7dByoN7k9L1pcyVSlwA"
+
+var assembleUrl = function(pts) {
+  url = "https://api.mapbox.com/optimized-trips/v1/mapbox/walking/";
+  for (i=0; i<state.markers.length; i++){
+    url = url + state.markers[i]._latlng.lng + "," + state.markers[i]._latlng.lat;
+    if(i < state.markers.length - 1) {url = url + ";"}
+  } ;
+  url = url + "?access_token=" + access;
+  return url;
+};
+
+/** ---------------
+functionalized ajax call for route
+---------------- */
+var routeCall = function(){
+  $.ajax({
+    url: assembleUrl(state.markers),
+    success: function(result){
+      var latlngs = decode(result.trips[0].geometry);
+      state.line = L.polyline(latlngs, {color: 'red'}).addTo(map);
+    }
+  })
+};
 
 /** ---------------
 Reset application
@@ -117,6 +144,24 @@ map.on('draw:created', function (e) {
   var type = e.layerType; // The type of shape
   var layer = e.layer; // The Leaflet layer for the shape
   var id = L.stamp(layer); // The unique Leaflet ID for the
+
+  //add user drawn point, increment point counter, add marker to marker array
+  map.addLayer(layer);
+  state.count+=1;
+  state.markers.push(layer);
+
+  //display reset button
+  $('#button-reset').show();
+
+  //runs routing if more than one point drawn
+  if(state.count>1){
+
+    //removes old route line before drawing new one
+    if(state.line) {map.removeLayer(state.line)}
+
+    //runs and displays AJAX query for route
+    routeCall()
+  };
 
   console.log('Do something with the layer you just created:', layer, layer._latlng);
 });
