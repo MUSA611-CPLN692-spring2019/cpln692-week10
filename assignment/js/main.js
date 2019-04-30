@@ -52,40 +52,40 @@ them from the map when we need to reset the map.
 ---------------- */
 
 var state = {
-  count: 0,
-  markers: [],
-  line: undefined,
+	count: 0,
+	markers: [],
+	line: undefined,
 }
 
 /** ---------------
 Map configuration
 ---------------- */
 
-var map = L.map('map', {
-  center: [42.378, -71.103],
-  zoom: 14
-});
+var map = L.map( 'map', {
+	center: [ 42.378, -71.103 ],
+	zoom: 14
+} );
 
-var Stamen_TonerLite = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-  attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  subdomains: 'abcd',
-}).addTo(map);
+var Stamen_TonerLite = L.tileLayer( 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+	subdomains: 'abcd',
+} ).addTo( map );
 
 /** ---------------
 Leaflet Draw configuration
 ---------------- */
 
-var drawControl = new L.Control.Draw({
-  draw: {
-    polyline: false,
-    polygon: false,
-    circle: false,
-    marker: true,
-    rectangle: false,
-  }
-});
+var drawControl = new L.Control.Draw( {
+	draw: {
+		polyline: false,
+		polygon: false,
+		circle: false,
+		marker: true,
+		rectangle: false,
+	}
+} );
 
-map.addControl(drawControl);
+map.addControl( drawControl );
 
 /** ---------------
 Reset application
@@ -95,28 +95,63 @@ write the rest of your application with this in mind, you won't need to make any
 function. That being said, you are welcome to make changes if it helps.
 ---------------- */
 
-var resetApplication = function() {
-  _.each(state.markers, function(marker) { map.removeLayer(marker) })
-  map.removeLayer(state.line);
+var resetApplication = function () {
+	_.each( state.markers, function ( marker ) { map.removeLayer( marker ) } )
+	map.removeLayer( state.line );
 
-  state.count = 0;
-  state.markers = []
-  state.line = undefined;
-  $('#button-reset').hide();
+	state.count = 0;
+	state.markers = []
+	state.line = undefined;
+	$( '#button-reset' ).hide();
 }
 
-$('#button-reset').click(resetApplication);
+$( '#button-reset' ).click( resetApplication );
 
 /** ---------------
 On draw
 
 Leaflet Draw runs every time a marker is added to the map. When this happens
 ---------------- */
+var urlCoords = ( m ) => {
+	var coords = "";
+	state.markers.forEach( function ( m ) {
+		coords += m._latlng.lng + "," + m._latlng.lat + ";";
+	} );
+	return coords.substring( 0, coords.length - 1 );
+}
 
-map.on('draw:created', function (e) {
-  var type = e.layerType; // The type of shape
-  var layer = e.layer; // The Leaflet layer for the shape
-  var id = L.stamp(layer); // The unique Leaflet ID for the
+var mapRoute = () => {
+	var access = "pk.eyJ1IjoiamlhbmdzdXRvbmciLCJhIjoiY2lwdDdpODF3MDAyZmh3a3NkNzMzZmwyeCJ9.a1S2KdfTkeKOzCOiSZpYrQ";
+	$.ajax( {
+		url: "https://api.mapbox.com/optimized-trips/v1/mapbox/driving/" + urlCoords() + "?access_token=" + access,
+		success: function ( result ) {
+			var latlngs = decode( result.trips[ 0 ].geometry );
+			state.line = L.polyline( latlngs, { color: 'red' } ).addTo( map );
+		}
+	} );
+}
 
-  console.log('Do something with the layer you just created:', layer, layer._latlng);
-});
+map.on( 'draw:created', function ( e ) {
+	var type = e.layerType; // The type of shape
+	var layer = e.layer; // The Leaflet layer for the shape
+	var id = L.stamp( layer ); // The unique Leaflet ID for the
+	// The user draws marker 1
+	if ( type === 'marker' ) {
+		state.count += 1;
+		state.markers.push( layer );
+		map.addLayer( layer );
+		// if there's information in myRectangle
+		if ( state.count == 2 ) {
+			mapRoute();
+			$( "#button-reset" ).show();
+		} else if ( state.count > 2 ) {
+			if ( state.line ) {
+				map.removeLayer( state.line );
+				mapRoute();
+			}
+
+		}
+	};
+
+	console.log( 'Do something with the layer you just created:', layer, layer._latlng );
+} );
