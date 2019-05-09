@@ -50,7 +50,7 @@ State
 Keeping track of `marker1`, `marker2`, and `line` will help us remove
 them from the map when we need to reset the map.
 ---------------- */
-
+//Assisted by Ian Schwarzenberg
 var state = {
   count: 0,
   markers: [],
@@ -94,29 +94,47 @@ Sets all of the state back to default values and removes both markers and the li
 write the rest of your application with this in mind, you won't need to make any changes to this
 function. That being said, you are welcome to make changes if it helps.
 ---------------- */
-
+//Set reset application by establishing button controls
 var resetApplication = function() {
   _.each(state.markers, function(marker) { map.removeLayer(marker) })
   map.removeLayer(state.line);
-
   state.count = 0;
   state.markers = []
   state.line = undefined;
-  $('#button-reset').hide();
-}
+  $('#button-draw').show(); //Establishes a draw button and sets it to show
+  $('#button-reset').hide(); //Establishes a reset button and sets it to hide
+  }
+  $('#button-reset').click(resetApplication);
 
-$('#button-reset').click(resetApplication);
 
 /** ---------------
 On draw
 
 Leaflet Draw runs every time a marker is added to the map. When this happens
 ---------------- */
-
+//Sets up functions to add markers and establish routes between them
+function coordsMaker() {
+  return state.markers[0]._latlng.lng + ',' + state.markers[0]._latlng.lat + ';' + state.markers[1]._latlng.lng + ',' + state.markers[1]._latlng.lat;
+  }
+function routeMaker() {
+  $.ajax({
+    url: "https://api.mapbox.com/directions/v5/mapbox/driving/" + coordsMaker() + ".json?access_token=" + "pk.eyJ1Ijoic211bGxhcmt1cGVubiIsImEiOiJjanR0OTZsbXoxMTI2M3lwZTN4cGg1ZGYzIn0.Ma0o0JLjqkxcYq2Mr55G4Q",
+    success: function(routes) {
+    state.line = L.polyline(decode(routes.routes[0].geometry),
+    {color: 'black', stroke: 2}).addTo(map);
+    }
+    })
+    }
 map.on('draw:created', function (e) {
-  var type = e.layerType; // The type of shape
-  var layer = e.layer; // The Leaflet layer for the shape
+  var type = e.layerType; // Sets shape type
+  var layer = e.layer; // Sets layer for the shape
   var id = L.stamp(layer); // The unique Leaflet ID for the
-
+  state.count = state.count + 1;//Adjustes state.count to next count
+  map.addLayer(layer);//Adds marker to map
+  state.markers.push(layer);//Adds marker to array
+  if (state.count == 2) {
+  	   routeMaker();
+  	   $('#button-reset').show();
+  }
   console.log('Do something with the layer you just created:', layer, layer._latlng);
-});
+  });
